@@ -46,7 +46,7 @@ Links: `proposed` Needs your confirmation (info) · `active` Linked (ok) · `fai
   1. **Both approved**: fail lists which doc is in which status.
   2. **Same asset**: TP.asset === PM.asset.
   3. **Tasks exist**: every task number referenced by a PM line exists in the TP.
-  4. **All tasks scheduled**: covered/total TP tasks on some PM line. Prototype: 100% pass, ≥ 50% warn, else fail. (Open question: scope says "all tasks scheduled" is a hard check.)
+  4. **All tasks scheduled**: covered/total TP tasks on some PM line. 100% pass, ≥ 50% warn, else fail (decided: follow the prototype).
   - Link OK = no check failed. Score = round(100 × (0.55 + 0.45 × ratio)), capped at 22 if asset differs, 35 if tasks missing.
 - Running the check on a pair that already has a non-failed link → "already associated" (no new record). A failed record for the pair is re-run in place.
 - Confirming a proposed link re-evaluates first; if it no longer passes it flips to `failed`. A proposed link can be discarded. Failed links offer "Run the check again".
@@ -68,10 +68,16 @@ Copy from the prototype `:root` (light) and dark overrides: Geist + Geist Mono, 
 TP-0039/PM-0013 (P-205, submitted), TP-0038/PM-0012 (C-210, approved, linked as TPPM-0007), TP-0036 (CB-12, approved), PM-0011 (GB-4, approved), TPPM-0006 failed (asset mismatch), TPPM-0008 failed (not approved). Sample extraction: P-101 pump, 6 tasks (task 6 at 62% from a scanned page 41), PM with quarterly line A (tasks 1–4) and annual line B (tasks 5–6).
 
 ## Decisions log
-- TypeScript + Next.js + Vercel.
+- TypeScript only. One Next.js project at the repo root, one Vercel deployment: pages served from the CDN, API routes run as on-demand serverless functions.
 - Database: Neon Postgres (relational). Tables: users, task_plans, tasks, pm_schedules, pm_lines, tppm. Approval is status/reviewer columns on the documents, not a separate table. ERD in `docs/erd.txt`.
 - users, task_plans and pm_schedules are independent: owner/reviewer/confirmer columns store a user id with no FK. FKs only on tasks → task_plans, pm_lines → pm_schedules, and tppm → task_plans, pm_schedules and users (created_by, confirmed_by).
 - Admin approves only task plans and PM schedules, never TPPM.
 - No ORM (no Drizzle). Raw SQL through Neon's driver, kept in a dedicated data folder (schema SQL + query functions with hand-written TypeScript types).
+- Folders: `app/` = Next.js pages + thin `app/api/` REST routes; `frontend/` = UI components; `backend/` = business rules; `data/` = DB queries; `llm/` = AI extraction.
+- Flow: browser → `app/api/*` route (reads session, calls backend) → `backend/` (rules) → `data/` (SQL) → Neon. The browser never loads backend/data code.
+- `backend/` never imports from Next.js (`next/*`), so it could later move into its own server/container unchanged.
+- API style: Next.js API route handlers (REST), not Server Actions.
+- Auth: bcryptjs password hashes + signed httpOnly JWT cookie (jose) with user id and role. No sessions table. Needs `AUTH_SECRET` env var.
+- TPPM check 4 follows the prototype: 100% scheduled = pass, 50–99% = warn (link can still be proposed), under 50% = fail.
 - Chat conversations are not stored in the DB (out of scope).
 - No PDF storage: keep only the source filename on the document.
