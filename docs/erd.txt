@@ -1,0 +1,57 @@
+EAM Copilot - Database ERD (Neon Postgres)
+==========================================
+
+ ┌──────────────────┐                              ┌──────────────────┐
+ │   task_plans     │                              │   pm_schedules   │
+ ├──────────────────┤                              ├──────────────────┤
+ │ PK id  (TP-0041) │                              │ PK id  (PM-0017) │
+ │    title         │                              │    title         │
+ │    asset_code    │                              │    asset_code    │
+ │    status        │                              │    status        │
+ └───┬──────────┬───┘                              └───┬──────────┬───┘
+     │ 1        │ 1                                  1 │          │ 1
+     │          │                                      │          │
+     │ N        │ N      ┌──────────────────────┐    N │          │ N
+ ┌───┴──────┐   └────────┤        tppm          ├──────┘   ┌──────┴───────┐
+ │  tasks   │            ├──────────────────────┤          │   pm_lines   │
+ ├──────────┤            │ PK id  (TPPM-0009)   │          ├──────────────┤
+ │ PK id    │            │ FK task_plan_id      │          │ PK id        │
+ │ FK task_ │            │ FK pm_schedule_id    │          │ FK pm_       │
+ │  plan_id │            │    status            │          │  schedule_id │
+ │    n     │            │    score, checks     │          │    code      │
+ │    conf. │            │ FK created_by        │          │    interval  │
+ └──────────┘            │ FK confirmed_by      │          │    task_     │
+                         └──────────┬───────────┘          │     numbers[]│
+                                    │ N                    └──────────────┘
+                                    │
+                                    │ 1
+                         ┌──────────┴───────┐
+                         │      users       │
+                         ├──────────────────┤
+                         │ PK id            │
+                         │    email, role   │
+                         └──────────────────┘
+
+
+Relationships
+-------------
+- task_plans 1 -> N tasks         (tasks.task_plan_id)
+- pm_schedules 1 -> N pm_lines    (pm_lines.pm_schedule_id)
+- tppm has foreign keys to task_plans (task_plan_id) and pm_schedules (pm_schedule_id),
+  and to users (created_by, confirmed_by) to record who ran the check and who confirmed the link.
+- task_plans, pm_schedules and users are independent of each other.
+
+
+The idea
+--------
+- A functional consultant uploads an OEM manual. The AI drafts a task plan (what to do)
+  and a PM schedule (when to do it) as two separate documents.
+- tasks and pm_lines are the rows inside those documents, so each lives in its own child table.
+- An admin approves or rejects task plans and PM schedules only (status on each document).
+  Admins never approve a TPPM.
+- tppm links one approved task plan to one approved PM schedule, after four checks:
+  both approved, same asset, referenced tasks exist, all tasks scheduled.
+  Pass -> proposed link the consultant confirms. Fail -> saved as failed, with reasons.
+- pm_lines.task_numbers refers to tasks.n by value, with no foreign key on purpose:
+  the schedule is drafted independently, so the "tasks exist" check must be able to fail.
+- The AI drafts, checks and proposes; humans approve and confirm.

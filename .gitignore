@@ -1,0 +1,14 @@
+# secrets
+.env*
+!.env.example
+
+# dependencies and build output
+node_modules/
+.next/
+out/
+.vercel/
+
+# misc
+*.log
+.DS_Store
+Thumbs.db
