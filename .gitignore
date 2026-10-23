@@ -8,6 +8,9 @@ node_modules/
 out/
 .vercel/
 
+# local docs
+docs/
+
 # misc
 *.log
 .DS_Store
