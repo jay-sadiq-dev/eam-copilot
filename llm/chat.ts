@@ -16,6 +16,7 @@ function errorMessage(error: unknown): string {
   if (status === 429) return 'Copilot has hit its usage limit for now. Please try again later.';
   if (status === 401 || status === 403) return 'Copilot could not sign in to Gemini. Check the API key.';
   if (status === 413) return 'That file is too large. Try a smaller PDF.';
+  if (status === 404) return 'The Gemini model is not available to this API key. Check GEMINI_MODEL.';
   return 'Copilot ran into a problem. Please try again.';
 }
 
