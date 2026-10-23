@@ -80,7 +80,7 @@ TP-0039/PM-0013 (P-205, submitted), TP-0038/PM-0012 (C-210, approved, linked as 
 - Auth: bcryptjs password hashes + signed httpOnly JWT cookie (jose) with user id and role. No sessions table. Needs `AUTH_SECRET` env var.
 - TPPM check 4 follows the prototype: 100% scheduled = pass, 50–99% = warn (link can still be proposed), under 50% = fail.
 - AI flow: Copilot reads the PDF and shows a rough draft in chat (not saved). The consultant refines it in conversation; only when they say so does the AI call a tool that saves it. Every write (save, submit, approve, reject, confirm, link) happens only on the user's explicit instruction. Result screens are for viewing output.
-- AI module: Vercel AI SDK in `llm/`, tool calling (no LangGraph). Tools call `backend/` functions as the signed-in user, so roles stay enforced on the server. Provider: Google Gemini (reads PDFs natively), key in `GOOGLE_GENERATIVE_AI_API_KEY`.
+- AI module: Vercel AI SDK in `llm/`, tool calling (no LangGraph). Tools call `backend/` functions as the signed-in user, so roles stay enforced on the server. Provider: Google Gemini (reads PDFs natively), key in `GOOGLE_GENERATIVE_AI_API_KEY`. Default model `gemini-3.5-flash` with thinking set to low (newest Flash models were often overloaded; 2.5 is closed to new keys); override with `GEMINI_MODEL`. Turns time out at 55 s (Vercel limit 60 s); the chat offers "Try again" on errors.
 - Low-confidence tasks are confirmed after saving (save draft → confirm task → submit). Result screens are read-only; all actions go through the chat. An unsaved draft lives only in the open page and is lost on refresh.
 - Chat conversations are not stored in the DB (out of scope).
 - No PDF storage: keep only the source filename on the document.

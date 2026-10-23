@@ -167,7 +167,7 @@ function readAsDataUrl(file: File) {
 
 export function CopilotChat({ user }: { user: SessionUser }) {
   const router = useRouter();
-  const { messages, sendMessage, status, error, setMessages, clearError } = useChat({ chat: chatFor(user.id) });
+  const { messages, sendMessage, status, error, setMessages, clearError, regenerate } = useChat({ chat: chatFor(user.id) });
   const [input, setInput] = useState('');
   const [pdf, setPdf] = useState<FileUIPart | null>(null);
   const [attachError, setAttachError] = useState('');
@@ -257,7 +257,13 @@ export function CopilotChat({ user }: { user: SessionUser }) {
             {error && (
               <div className="msg-a">
                 <div className="ai-av">E</div>
-                <div className="msg-body msg-err" role="alert">{errorText(error)}</div>
+                <div className="msg-body">
+                  <span className="msg-err" role="alert">{errorText(error)}</span>
+                  {/* Re-sends the last message; a reply cut off part-way is replaced. */}
+                  <div className="row">
+                    <button className="btn sm" onClick={() => { clearError(); regenerate(); }}>Try again</button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
